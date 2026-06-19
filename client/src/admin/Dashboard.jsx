@@ -1,8 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Crown, LogOut, Calendar, Users, Mail, FileText, Plus, Search, 
-  Trash2, Edit, CheckCircle2, XCircle, AlertCircle, Loader2, RefreshCw, Filter, Sparkles
-} from 'lucide-react';
+  FiLogOut as LogOut, 
+  FiCalendar as Calendar, 
+  FiUsers as Users, 
+  FiMail as Mail, 
+  FiFileText as FileText, 
+  FiPlus as Plus, 
+  FiSearch as Search, 
+  FiTrash2 as Trash2, 
+  FiEdit as Edit, 
+  FiCheckCircle as CheckCircle2, 
+  FiXCircle as XCircle, 
+  FiAlertCircle as AlertCircle, 
+  FiLoader as Loader2, 
+  FiRefreshCw as RefreshCw, 
+  FiFilter as Filter
+} from 'react-icons/fi';
+import { HiSparkles as Sparkles } from 'react-icons/hi';
+import { GiCrown as Crown } from 'react-icons/gi';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 

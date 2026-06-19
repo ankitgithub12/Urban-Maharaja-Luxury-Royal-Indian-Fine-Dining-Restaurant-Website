@@ -1,21 +1,9 @@
-
 import React from 'react';
-import { Calendar, Crown, ShieldAlert } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { FiCalendar } from 'react-icons/fi';
+import { GiCrown } from 'react-icons/gi';
 
 const Events = () => {
-  const handleScrollToContact = (e) => {
-    e.preventDefault();
-    const contactSec = document.querySelector('#contact');
-    if (contactSec) {
-      contactSec.scrollIntoView({ behavior: 'smooth' });
-      // Pre-fill subject if possible
-      const subjectInput = document.getElementById('contact-subject');
-      if (subjectInput) {
-        subjectInput.value = 'Private Event Booking Inquiry';
-      }
-    }
-  };
-
   return (
     <section id="events" className="py-24 bg-[#050C1A] border-t border-gold/10 relative overflow-hidden">
       {/* Visual background maroon color splash */}
@@ -39,29 +27,28 @@ const Events = () => {
             {/* Showcase list */}
             <div className="space-y-4 mb-8">
               <div className="flex items-start gap-3 justify-center lg:justify-start">
-                <Crown className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
+                <GiCrown className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
                 <span className="font-sans text-xs md:text-sm text-gold-light/90">Customizable configurations for parties between 15 to 150 guests</span>
               </div>
               <div className="flex items-start gap-3 justify-center lg:justify-start">
-                <Crown className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
+                <GiCrown className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
                 <span className="font-sans text-xs md:text-sm text-gold-light/90">Curated catering options featuring traditional Mughlai & Awadhi courses</span>
               </div>
               <div className="flex items-start gap-3 justify-center lg:justify-start">
-                <Crown className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
+                <GiCrown className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
                 <span className="font-sans text-xs md:text-sm text-gold-light/90">State-of-the-art audiovisual setups for private corporate summits</span>
               </div>
             </div>
 
             {/* Action CTA */}
             <div className="flex justify-center lg:justify-start">
-              <a
-                href="#contact"
-                onClick={handleScrollToContact}
+              <Link
+                to="/contact?subject=Private Event Booking Inquiry"
                 className="btn-gold-shimmer px-8 py-3.5 rounded-none font-sans text-xs tracking-widest uppercase font-semibold flex items-center gap-2"
               >
-                <Calendar className="w-4 h-4" />
+                <FiCalendar className="w-4 h-4" />
                 Inquire Private Events
-              </a>
+              </Link>
             </div>
           </div>
 

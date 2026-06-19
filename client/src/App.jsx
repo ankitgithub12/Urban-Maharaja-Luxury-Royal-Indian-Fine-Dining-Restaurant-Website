@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Story from './components/Story';
@@ -13,95 +14,201 @@ import Footer from './components/Footer';
 import FloatingCTA from './components/FloatingCTA';
 import Dashboard from './admin/Dashboard';
 
-function App() {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
-
-  // Intersection Observer for scroll reveal animations
+// Reusable ScrollToTop component
+function ScrollToTop() {
+  const { pathname } = useLocation();
   useEffect(() => {
-    if (currentPath === '/admin') return;
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
+// Reusable premium header for subpages
+const PageHeader = ({ title, subtitle, bgImage }) => {
+  return (
+    <div className="relative h-[45vh] min-h-[320px] w-full flex items-center justify-center overflow-hidden bg-[#050C1A] pt-16">
+      {/* Background Image / Gradient */}
+      {bgImage ? (
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-40 scale-105"
+          style={{ backgroundImage: `url(${bgImage})` }}
+        />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-r from-[#4A0E17] via-[#050C1A] to-[#4A0E17] opacity-60" />
+      )}
+      
+      {/* Gold Radial Shimmer Overlays */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#050C1A] via-transparent to-[#050C1A]/80" />
+      <div className="absolute inset-0 bg-radial-gradient from-transparent to-[#050C1A]/95" />
+      
+      {/* Content */}
+      <div className="relative z-10 text-center px-6 max-w-4xl">
+        {/* Decorative badge */}
+        <div className="inline-block border border-gold/30 px-3 py-1 bg-[#050C1A]/60 backdrop-blur-sm mb-4">
+          <span className="font-sans text-[10px] tracking-[0.3em] text-gold uppercase block">{subtitle}</span>
+        </div>
+        <h1 className="font-serif text-3xl md:text-5xl lg:text-6xl font-bold text-gold-light tracking-wide royal-underline">
+          {title}
+        </h1>
+      </div>
+    </div>
+  );
+};
+
+// Home (Main Page) containing all sections sequentially
+const Home = () => {
+  return (
+    <>
+      <Hero />
+      <main className="relative">
+        <Story />
+        <MenuSection />
+        <Experience />
+        <Events />
+        <AmbienceGallery />
+        <Testimonials />
+        <ReservationForm />
+        <ContactSection />
+      </main>
+    </>
+  );
+};
+
+function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Intersection Observer for scroll reveal animations (only for home page or subpages with reveal classes)
+  useEffect(() => {
     const observerOptions = {
       root: null,
       rootMargin: '0px',
-      threshold: 0.1, // trigger when 10% of element is visible
+      threshold: 0.1,
     };
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add('active');
-          // Once animated, we don't need to observe it anymore
           observer.unobserve(entry.target);
         }
       });
     }, observerOptions);
 
-    // Grab all elements configured for scroll reveal
     const revealElements = document.querySelectorAll('.reveal-on-scroll');
     revealElements.forEach((el) => observer.observe(el));
 
     return () => {
       revealElements.forEach((el) => observer.unobserve(el));
     };
-  }, [currentPath]);
+  }, [location.pathname]);
 
-  // Listen to browser navigation changes
-  useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  const navigate = (path) => {
-    window.history.pushState({}, '', path);
-    setCurrentPath(path);
-  };
-
-  if (currentPath === '/admin' || currentPath.startsWith('/admin')) {
-    return <Dashboard navigate={navigate} />;
-  }
+  const isAdmin = location.pathname.startsWith('/admin');
 
   return (
     <div className="relative min-h-screen bg-[#050C1A] text-[#FDFBF7] antialiased selection:bg-gold selection:text-royal-navy">
-      {/* Premium Glassmorphic Top Navigation Header */}
-      <Navbar />
+      <ScrollToTop />
+      
+      {/* Do not render client elements on Admin screens */}
+      {!isAdmin && <Navbar />}
 
-      {/* Hero Banner Section */}
-      <Hero />
+      <Routes>
+        {/* Main landing page */}
+        <Route path="/" element={<Home />} />
 
-      <main className="relative">
-        {/* Our Royal Story Section */}
-        <Story />
+        {/* Dedicated Page: Our Story */}
+        <Route path="/story" element={
+          <>
+            <PageHeader 
+              title="Our Heritage & Story" 
+              subtitle="The Sovereign Legacy" 
+              bgImage="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=1920&q=80" 
+            />
+            <Story />
+            <Testimonials />
+          </>
+        } />
 
-        {/* Signature Dishes & Chef Specials */}
-        <MenuSection />
+        {/* Dedicated Page: Signature Menu */}
+        <Route path="/menu" element={
+          <>
+            <PageHeader 
+              title="Imperial Dining Menu" 
+              subtitle="Epicurean Selections" 
+              bgImage="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=1920&q=80" 
+            />
+            <MenuSection />
+          </>
+        } />
 
-        {/* Fine Dining Experience Details */}
-        <Experience />
+        {/* Dedicated Page: Fine Dining Experience */}
+        <Route path="/experience" element={
+          <>
+            <PageHeader 
+              title="The Maharaja Experience" 
+              subtitle="Regal Hospitality Protocols" 
+              bgImage="https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1920&q=80" 
+            />
+            <Experience />
+            <Testimonials />
+          </>
+        } />
 
-        {/* Private Events & Banquets */}
-        <Events />
+        {/* Dedicated Page: Ambience Gallery */}
+        <Route path="/gallery" element={
+          <>
+            <PageHeader 
+              title="Gallery of Royal Ambience" 
+              subtitle="Visual Splendor" 
+              bgImage="https://images.unsplash.com/photo-1545232979-8bf34eb9757b?auto=format&fit=crop&w=1920&q=80" 
+            />
+            <AmbienceGallery />
+          </>
+        } />
 
-        {/* Ambience Gallery & Lightbox Viewer */}
-        <AmbienceGallery />
+        {/* Dedicated Page: Private Events */}
+        <Route path="/events" element={
+          <>
+            <PageHeader 
+              title="Banquets & Private Celebrations" 
+              subtitle="Host In Royal Splendor" 
+              bgImage="https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=1920&q=80" 
+            />
+            <Events />
+          </>
+        } />
 
-        {/* Customer Testimonials & Reviews Slider */}
-        <Testimonials />
+        {/* Dedicated Page: Secure Reservation */}
+        <Route path="/reserve" element={
+          <>
+            <PageHeader 
+              title="Online Reservation Desk" 
+              subtitle="Guarantee Your Throne" 
+              bgImage="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1920&q=80" 
+            />
+            <ReservationForm />
+          </>
+        } />
 
-        {/* Interactive Reservation Wizard */}
-        <ReservationForm />
+        {/* Dedicated Page: Contact Concierge */}
+        <Route path="/contact" element={
+          <>
+            <PageHeader 
+              title="Reach the Sovereign Court" 
+              subtitle="Concierge & Directions" 
+              bgImage="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1920&q=80" 
+            />
+            <ContactSection />
+          </>
+        } />
 
-        {/* Contact Coordinates & Google Map */}
-        <ContactSection />
-      </main>
+        {/* Admin Dashboard Page */}
+        <Route path="/admin" element={<Dashboard navigate={navigate} />} />
+        <Route path="/admin/*" element={<Dashboard navigate={navigate} />} />
+      </Routes>
 
-      {/* Gold-trimmed Footer with Lead Capture */}
-      <Footer />
-
-      {/* Mobile-optimized Floating CTA Action Buttons */}
-      <FloatingCTA />
+      {!isAdmin && <Footer />}
+      {!isAdmin && <FloatingCTA />}
     </div>
   );
 }

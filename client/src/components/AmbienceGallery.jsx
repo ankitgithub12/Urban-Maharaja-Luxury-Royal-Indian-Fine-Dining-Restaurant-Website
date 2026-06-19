@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, X } from 'lucide-react';
+import { FiEye, FiX } from 'react-icons/fi';
 
 const AmbienceGallery = () => {
   const [selectedImg, setSelectedImg] = useState(null);
@@ -104,7 +104,7 @@ const AmbienceGallery = () => {
               {/* Hover Overlay */}
               <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-center items-center p-6 text-center">
                 <div className="p-3 border border-gold/40 rounded-full bg-[#050C1A]/80 mb-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <Eye className="w-5 h-5 text-gold" />
+                  <FiEye className="w-5 h-5 text-gold" />
                 </div>
                 <h3 className="font-serif text-lg text-gold-light font-medium tracking-wide transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">
                   {item.title}
@@ -128,7 +128,7 @@ const AmbienceGallery = () => {
               onClick={() => setSelectedImg(null)}
               className="absolute top-6 right-6 text-gold-light hover:text-gold focus:outline-none p-2"
             >
-              <X className="w-8 h-8" />
+              <FiX className="w-8 h-8" />
             </button>
             
             {/* Modal Image frame */}

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Crown, CalendarRange } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { FiMenu, FiX, FiCalendar } from 'react-icons/fi';
+import { GiCrown } from 'react-icons/gi';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,32 +20,19 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: 'Our Story', href: '#story' },
-    { name: 'Signature Menu', href: '#menu' },
-    { name: 'Experience', href: '#experience' },
-    { name: 'Gallery', href: '#gallery' },
-    { name: 'Private Events', href: '#events' },
-    { name: 'Contact', href: '#contact' },
-  ];
-
-  const handleLinkClick = (e, href) => {
-    e.preventDefault();
+  // Close mobile menu on path changes
+  useEffect(() => {
     setIsMobileMenuOpen(false);
-    const element = document.querySelector(href);
-    if (element) {
-      const offset = 80; // Navbar height
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
+  }, [location.pathname]);
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
-    }
-  };
+  const navLinks = [
+    { name: 'Our Story', path: '/story' },
+    { name: 'Signature Menu', path: '/menu' },
+    { name: 'Experience', path: '/experience' },
+    { name: 'Gallery', path: '/gallery' },
+    { name: 'Private Events', path: '/events' },
+    { name: 'Contact', path: '/contact' },
+  ];
 
   return (
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
@@ -52,45 +42,50 @@ const Navbar = () => {
     }`}>
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
         {/* Brand Logo */}
-        <a href="#" className="flex items-center gap-2 group">
-          <Crown className="w-8 h-8 text-gold transition-transform duration-500 group-hover:rotate-[360deg]" />
+        <Link to="/" className="flex items-center gap-2 group">
+          <GiCrown className="w-8 h-8 text-gold transition-transform duration-500 group-hover:rotate-[360deg]" />
           <span className="font-serif text-2xl font-bold tracking-widest text-gold-light group-hover:text-gold transition-colors duration-300">
             URBAN <span className="text-gold">MAHARAJA</span>
           </span>
-        </a>
+        </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              onClick={(e) => handleLinkClick(e, link.href)}
-              className="font-sans text-sm tracking-widest text-[#FDFBF7]/80 hover:text-gold transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:height-[1px] after:bg-gold hover:after:w-full after:transition-all after:duration-300"
-            >
-              {link.name}
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.path;
+            return (
+              <Link
+                key={link.name}
+                to={link.path}
+                className={`font-sans text-sm tracking-widest transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:height-[1px] after:bg-gold after:transition-all after:duration-300 ${
+                  isActive 
+                    ? 'text-gold after:w-full' 
+                    : 'text-[#FDFBF7]/80 hover:text-gold after:w-0 hover:after:w-full'
+                }`}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Desktop CTA */}
         <div className="hidden lg:block">
-          <a
-            href="#reserve"
-            onClick={(e) => handleLinkClick(e, '#reserve')}
+          <Link
+            to="/reserve"
             className="btn-gold-shimmer px-6 py-2.5 rounded-none font-sans text-xs tracking-widest uppercase font-semibold flex items-center gap-2"
           >
-            <CalendarRange className="w-4 h-4" />
+            <FiCalendar className="w-4 h-4" />
             Reserve Table
-          </a>
+          </Link>
         </div>
 
         {/* Mobile Menu Trigger */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="lg:hidden text-gold hover:text-gold-light focus:outline-none"
+          className="lg:hidden text-gold hover:text-gold-light focus:outline-none cursor-pointer"
         >
-          {isMobileMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+          {isMobileMenuOpen ? <FiX className="w-7 h-7" /> : <FiMenu className="w-7 h-7" />}
         </button>
       </div>
 
@@ -98,25 +93,28 @@ const Navbar = () => {
       <div className={`fixed inset-0 top-[72px] bg-[#050C1A]/95 backdrop-blur-lg border-t border-gold/10 z-40 transition-all duration-500 lg:hidden ${
         isMobileMenuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full pointer-events-none'
       }`}>
-        <div className="flex flex-col items-center justify-center h-full gap-8 p-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              onClick={(e) => handleLinkClick(e, link.href)}
-              className="font-serif text-2xl tracking-widest text-gold-light hover:text-gold transition-colors duration-300"
-            >
-              {link.name}
-            </a>
-          ))}
-          <a
-            href="#reserve"
-            onClick={(e) => handleLinkClick(e, '#reserve')}
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-72px)] gap-8 p-8 overflow-y-auto">
+          {navLinks.map((link) => {
+            const isActive = location.pathname === link.path;
+            return (
+              <Link
+                key={link.name}
+                to={link.path}
+                className={`font-serif text-2xl tracking-widest transition-colors duration-300 ${
+                  isActive ? 'text-gold font-semibold' : 'text-gold-light hover:text-gold'
+                }`}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
+          <Link
+            to="/reserve"
             className="btn-gold-shimmer px-8 py-3.5 rounded-none font-sans text-sm tracking-widest uppercase font-semibold flex items-center gap-2 mt-4"
           >
-            <CalendarRange className="w-5 h-5" />
+            <FiCalendar className="w-5 h-5" />
             Reserve Table
-          </a>
+          </Link>
         </div>
       </div>
     </nav>

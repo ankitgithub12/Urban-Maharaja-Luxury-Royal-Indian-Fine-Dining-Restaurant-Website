@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Crown, Mail, Send, Facebook, Instagram, Twitter, ShieldCheck } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { GiCrown } from 'react-icons/gi';
+import { FiMail, FiSend, FiShield, FiInstagram, FiFacebook, FiTwitter } from 'react-icons/fi';
 
 const Footer = () => {
   const [email, setEmail] = useState('');
@@ -32,23 +34,6 @@ const Footer = () => {
     }
   };
 
-  const handleLinkClick = (e, selector) => {
-    e.preventDefault();
-    const element = document.querySelector(selector);
-    if (element) {
-      const offset = 80;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
-  };
-
   return (
     <footer className="bg-[#030811] text-[#FDFBF7]/80 border-t border-gold/15 py-16 relative">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 items-start">
@@ -56,7 +41,7 @@ const Footer = () => {
         {/* Logo and Intro (Col 1) */}
         <div className="lg:col-span-4 space-y-6">
           <div className="flex items-center gap-2">
-            <Crown className="w-7 h-7 text-gold" />
+            <GiCrown className="w-7 h-7 text-gold" />
             <span className="font-serif text-xl font-bold tracking-widest text-gold-light">
               URBAN <span className="text-gold">MAHARAJA</span>
             </span>
@@ -67,13 +52,13 @@ const Footer = () => {
           {/* Social icons */}
           <div className="flex gap-4">
             <a href="#" className="p-2 border border-gold/15 hover:border-gold text-gold hover:text-gold-light transition-all rounded-full">
-              <Instagram className="w-4 h-4" />
+              <FiInstagram className="w-4 h-4" />
             </a>
             <a href="#" className="p-2 border border-gold/15 hover:border-gold text-gold hover:text-gold-light transition-all rounded-full">
-              <Facebook className="w-4 h-4" />
+              <FiFacebook className="w-4 h-4" />
             </a>
             <a href="#" className="p-2 border border-gold/15 hover:border-gold text-gold hover:text-gold-light transition-all rounded-full">
-              <Twitter className="w-4 h-4" />
+              <FiTwitter className="w-4 h-4" />
             </a>
           </div>
         </div>
@@ -83,16 +68,16 @@ const Footer = () => {
           <h4 className="font-serif text-sm tracking-widest text-gold font-semibold uppercase">The Palace</h4>
           <ul className="space-y-2.5 font-sans text-xs md:text-sm font-light">
             <li>
-              <a href="#story" onClick={(e) => handleLinkClick(e, '#story')} className="hover:text-gold transition-colors">Our Story</a>
+              <Link to="/story" className="hover:text-gold transition-colors">Our Story</Link>
             </li>
             <li>
-              <a href="#menu" onClick={(e) => handleLinkClick(e, '#menu')} className="hover:text-gold transition-colors">Signature Menu</a>
+              <Link to="/menu" className="hover:text-gold transition-colors">Signature Menu</Link>
             </li>
             <li>
-              <a href="#experience" onClick={(e) => handleLinkClick(e, '#experience')} className="hover:text-gold transition-colors">Experience</a>
+              <Link to="/experience" className="hover:text-gold transition-colors">Experience</Link>
             </li>
             <li>
-              <a href="#gallery" onClick={(e) => handleLinkClick(e, '#gallery')} className="hover:text-gold transition-colors">Gallery</a>
+              <Link to="/gallery" className="hover:text-gold transition-colors">Gallery</Link>
             </li>
           </ul>
         </div>
@@ -116,7 +101,7 @@ const Footer = () => {
 
           {subscribed ? (
             <div className="p-3.5 bg-gold/5 border border-gold/20 text-gold text-xs tracking-wider flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" />
+              <FiShield className="w-4 h-4" />
               Your invitation to the club has been registered.
             </div>
           ) : (
@@ -132,9 +117,9 @@ const Footer = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-gold hover:bg-gold-dark text-royal-navy px-4 py-3 flex items-center justify-center transition-colors"
+                className="bg-gold hover:bg-gold-dark text-royal-navy px-4 py-3 flex items-center justify-center transition-colors cursor-pointer"
               >
-                <Send className="w-4.5 h-4.5" />
+                <FiSend className="w-4.5 h-4.5" />
               </button>
             </form>
           )}

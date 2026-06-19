@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Quote, ArrowLeft, ArrowRight } from 'lucide-react';
+import { FaStar, FaQuoteLeft } from 'react-icons/fa';
+import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
 
 const Testimonials = () => {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -60,7 +61,7 @@ const Testimonials = () => {
         <div className="glass-panel p-8 md:p-16 border border-gold/10 relative reveal-on-scroll">
           {/* Decorative Quote Icon */}
           <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-[#050C1A] border border-gold/15 p-3 rounded-full">
-            <Quote className="w-6 h-6 text-gold" />
+            <FaQuoteLeft className="w-6 h-6 text-gold" />
           </div>
 
           {/* Active Review Slide */}
@@ -68,7 +69,7 @@ const Testimonials = () => {
             {/* Stars */}
             <div className="flex gap-1 mb-6 justify-center">
               {[...Array(reviews[activeIdx].rating)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 fill-gold text-gold" />
+                <FaStar key={i} className="w-5 h-5 fill-gold text-gold" />
               ))}
             </div>
 
@@ -98,7 +99,7 @@ const Testimonials = () => {
               onClick={handlePrev}
               className="p-2 border border-gold/10 text-gold-light hover:text-gold hover:border-gold/40 transition-colors duration-300"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <FiArrowLeft className="w-4 h-4" />
             </button>
             
             {/* Slide Indicators */}
@@ -118,7 +119,7 @@ const Testimonials = () => {
               onClick={handleNext}
               className="p-2 border border-gold/10 text-gold-light hover:text-gold hover:border-gold/40 transition-colors duration-300"
             >
-              <ArrowRight className="w-4 h-4" />
+              <FiArrowRight className="w-4 h-4" />
             </button>
           </div>
 

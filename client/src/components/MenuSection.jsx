@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Sparkles, Leaf } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { HiSparkles } from 'react-icons/hi';
 
 const MenuSection = () => {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -136,7 +137,7 @@ const MenuSection = () => {
                 {/* Shimmer label */}
                 {item.tag && (
                   <div className="absolute top-4 right-4 z-10 bg-gold text-royal-navy text-[9px] font-sans font-bold tracking-widest uppercase px-3 py-1 flex items-center gap-1">
-                    <Sparkles className="w-2.5 h-2.5" />
+                    <HiSparkles className="w-2.5 h-2.5" />
                     {item.tag}
                   </div>
                 )}
@@ -157,17 +158,13 @@ const MenuSection = () => {
                 </p>
                 
                 {/* CTA inside card */}
-                <a
-                  href="#reserve"
+                <Link
+                  to="/reserve"
                   className="mt-auto inline-flex items-center justify-between text-xs tracking-widest uppercase text-gold hover:text-gold-light font-semibold border-t border-gold/10 pt-4 group-hover:border-gold/20 transition-all duration-300"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    document.querySelector('#reserve')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
                 >
                   <span>Reserve Table For This</span>
                   <span>&rarr;</span>
-                </a>
+                </Link>
               </div>
             </div>
           ))}

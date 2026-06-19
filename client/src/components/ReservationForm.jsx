@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { CalendarRange, Users, Landmark, Clock, MessageSquare, Clipboard, Sparkles } from 'lucide-react';
+import { FiCalendar, FiMessageSquare, FiClipboard } from 'react-icons/fi';
+import { HiSparkles } from 'react-icons/hi';
 
 const ReservationForm = () => {
   const [formData, setFormData] = useState({
@@ -300,7 +301,7 @@ const ReservationForm = () => {
                   disabled={loading || (availability && !availability.available)}
                   className="btn-gold-shimmer w-full sm:w-auto px-8 py-4 text-xs font-semibold uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  <CalendarRange className="w-4 h-4" />
+                  <FiCalendar className="w-4 h-4" />
                   {loading ? 'Confirming with Palace...' : 'Secure Reservation'}
                 </button>
                 
@@ -309,7 +310,7 @@ const ReservationForm = () => {
                   onClick={triggerWhatsApp}
                   className="w-full sm:w-auto px-8 py-4 text-xs font-semibold uppercase tracking-widest border border-green-600/50 hover:border-green-600 bg-green-950/20 text-green-400 hover:text-green-300 transition-colors flex items-center justify-center gap-2"
                 >
-                  <MessageSquare className="w-4 h-4" />
+                  <FiMessageSquare className="w-4 h-4" />
                   Reserve via WhatsApp
                 </button>
               </div>
@@ -319,7 +320,7 @@ const ReservationForm = () => {
             // Success state - Royal Ticket
             <div className="text-center py-8 relative z-10 flex flex-col items-center">
               <div className="inline-block p-4 border border-gold/30 rounded-full bg-gold/5 mb-6 animate-bounce">
-                <Sparkles className="w-10 h-10 text-gold" />
+                <HiSparkles className="w-10 h-10 text-gold" />
               </div>
               
               <h3 className="font-serif text-3xl text-gold mb-3">Reservation Confirmed</h3>
@@ -338,7 +339,7 @@ const ReservationForm = () => {
                     <div className="flex items-center gap-2 mt-1">
                       <span className="font-serif text-xl font-bold tracking-wider text-gold-light">{bookingResponse.bookingCode}</span>
                       <button onClick={copyCode} className="text-gold hover:text-gold-light p-1">
-                        <Clipboard className="w-4 h-4" />
+                        <FiClipboard className="w-4 h-4" />
                       </button>
                     </div>
                   </div>

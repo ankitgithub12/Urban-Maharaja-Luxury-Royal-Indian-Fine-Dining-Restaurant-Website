@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, MessageSquare, Send, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { FiMail, FiPhone, FiMapPin, FiClock, FiSend, FiCheck } from 'react-icons/fi';
 
 const ContactSection = () => {
+  const location = useLocation();
   const [formState, setFormState] = useState({
     name: '',
     email: '',
@@ -13,6 +15,14 @@ const ContactSection = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const subjectParam = params.get('subject');
+    if (subjectParam) {
+      setFormState(prev => ({ ...prev, subject: subjectParam }));
+    }
+  }, [location.search]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -69,7 +79,7 @@ const ContactSection = () => {
               
               {/* Address */}
               <div className="flex gap-4 items-start">
-                <MapPin className="w-5 h-5 text-gold mt-1 flex-shrink-0" />
+                <FiMapPin className="w-5 h-5 text-gold mt-1 flex-shrink-0" />
                 <div>
                   <h4 className="font-serif text-lg text-gold-light font-medium tracking-wide">The Royal Palace Estate</h4>
                   <p className="font-sans text-xs md:text-sm text-gold-light/75 mt-1 font-light leading-relaxed">
@@ -81,7 +91,7 @@ const ContactSection = () => {
 
               {/* Telephone */}
               <div className="flex gap-4 items-start">
-                <Phone className="w-5 h-5 text-gold mt-1 flex-shrink-0" />
+                <FiPhone className="w-5 h-5 text-gold mt-1 flex-shrink-0" />
                 <div>
                   <h4 className="font-serif text-lg text-gold-light font-medium tracking-wide">Royal Reservations</h4>
                   <p className="font-sans text-xs md:text-sm text-gold-light/75 mt-1 font-light">
@@ -93,7 +103,7 @@ const ContactSection = () => {
 
               {/* Email */}
               <div className="flex gap-4 items-start">
-                <Mail className="w-5 h-5 text-gold mt-1 flex-shrink-0" />
+                <FiMail className="w-5 h-5 text-gold mt-1 flex-shrink-0" />
                 <div>
                   <h4 className="font-serif text-lg text-gold-light font-medium tracking-wide">Digital Scribe</h4>
                   <p className="font-sans text-xs md:text-sm text-gold-light/75 mt-1 font-light">
@@ -105,7 +115,7 @@ const ContactSection = () => {
 
               {/* Hours */}
               <div className="flex gap-4 items-start">
-                <Clock className="w-5 h-5 text-gold mt-1 flex-shrink-0" />
+                <FiClock className="w-5 h-5 text-gold mt-1 flex-shrink-0" />
                 <div>
                   <h4 className="font-serif text-lg text-gold-light font-medium tracking-wide">Dining Sessions</h4>
                   <p className="font-sans text-xs md:text-sm text-gold-light/75 mt-1 font-light">
@@ -141,7 +151,7 @@ const ContactSection = () => {
               {success ? (
                 <div className="text-center py-10 flex flex-col items-center">
                   <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-full mb-4">
-                    <Check className="w-8 h-8 text-green-400" />
+                    <FiCheck className="w-8 h-8 text-green-400" />
                   </div>
                   <h4 className="font-serif text-xl text-gold mb-2">Message Dispatched</h4>
                   <p className="font-sans text-xs md:text-sm text-gold-light/70 max-w-sm font-light leading-relaxed">
@@ -234,7 +244,7 @@ const ContactSection = () => {
                     disabled={loading}
                     className="btn-gold-shimmer px-8 py-3.5 text-xs font-semibold uppercase tracking-widest flex items-center gap-2"
                   >
-                    <Send className="w-4 h-4" />
+                    <FiSend className="w-4 h-4" />
                     {loading ? 'Dispatched...' : 'Send Message'}
                   </button>
 

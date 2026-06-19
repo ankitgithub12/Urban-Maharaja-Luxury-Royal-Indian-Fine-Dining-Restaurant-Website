@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { CalendarRange, ChevronDown, Compass } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { FiCalendar, FiChevronDown, FiCompass } from 'react-icons/fi';
 
 const Hero = () => {
   const images = [
@@ -16,23 +17,6 @@ const Hero = () => {
     }, 6000);
     return () => clearInterval(timer);
   }, []);
-
-  const handleScrollTo = (e, selector) => {
-    e.preventDefault();
-    const element = document.querySelector(selector);
-    if (element) {
-      const offset = 80;
-      const bodyRect = document.body.getBoundingClientRect().top;
-      const elementRect = element.getBoundingClientRect().top;
-      const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
-    }
-  };
 
   return (
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-black">
@@ -80,35 +64,32 @@ const Hero = () => {
 
         {/* Call to Actions */}
         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full justify-center">
-          <a
-            href="#reserve"
-            onClick={(e) => handleScrollTo(e, '#reserve')}
+          <Link
+            to="/reserve"
             className="btn-gold-shimmer w-full sm:w-auto px-8 py-4 text-xs uppercase tracking-widest font-semibold flex items-center justify-center gap-2"
           >
-            <CalendarRange className="w-4 h-4" />
+            <FiCalendar className="w-4 h-4" />
             Reserve a Table
-          </a>
-          <a
-            href="#menu"
-            onClick={(e) => handleScrollTo(e, '#menu')}
+          </Link>
+          <Link
+            to="/menu"
             className="w-full sm:w-auto px-8 py-4 text-xs uppercase tracking-widest font-semibold border border-gold/40 hover:border-gold hover:text-gold text-gold-light bg-[#050C1A]/40 backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2"
           >
-            <Compass className="w-4 h-4" />
+            <FiCompass className="w-4 h-4" />
             Explore Menu
-          </a>
+          </Link>
         </div>
       </div>
 
       {/* Down Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center gap-1">
         <span className="font-sans text-[10px] tracking-[0.3em] uppercase text-gold/60">Descend</span>
-        <a
-          href="#story"
-          onClick={(e) => handleScrollTo(e, '#story')}
+        <Link
+          to="/story"
           className="text-gold hover:text-gold-light transition-colors duration-300 animate-bounce"
         >
-          <ChevronDown className="w-5 h-5" />
-        </a>
+          <FiChevronDown className="w-5 h-5" />
+        </Link>
       </div>
     </section>
   );

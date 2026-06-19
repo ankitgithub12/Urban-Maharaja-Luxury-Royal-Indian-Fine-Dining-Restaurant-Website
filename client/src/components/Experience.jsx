@@ -1,25 +1,27 @@
 import React from 'react';
-import { Music, Landmark, ShieldCheck, GlassWater } from 'lucide-react';
+import { FiMusic, FiShield } from 'react-icons/fi';
+import { FaUniversity } from 'react-icons/fa';
+import { GiWineGlass } from 'react-icons/gi';
 
 const Experience = () => {
   const experiences = [
     {
-      icon: <Landmark className="w-8 h-8 text-gold" />,
+      icon: <FaUniversity className="w-8 h-8 text-gold" />,
       title: 'Maharaja Royal Protocols',
       desc: 'Be received with ancestral hospitality rituals. Traditional rosewater hand sprits, a soft silk stole placement, and custom brass thali table settings set a regal tone.'
     },
     {
-      icon: <Music className="w-8 h-8 text-gold" />,
+      icon: <FiMusic className="w-8 h-8 text-gold" />,
       title: 'Live Sufi & Sitar Recitals',
       desc: 'Sip on champagne while listening to the delicate, acoustic melodies of the sitar and classical Sufi performance in the central court during twilight hours.'
     },
     {
-      icon: <ShieldCheck className="w-8 h-8 text-gold" />,
+      icon: <FiShield className="w-8 h-8 text-gold" />,
       title: 'Diwan Private Dining Suites',
       desc: 'For private banquets or high-security dining, choose our Sheesh Mahal (Mirror Room) or Maharani chambers with personal service stewards.'
     },
     {
-      icon: <GlassWater className="w-8 h-8 text-gold" />,
+      icon: <GiWineGlass className="w-8 h-8 text-gold" />,
       title: 'Royal Sommelier Pairings',
       desc: 'Explore curated old-world vintage selections paired seamlessly with rich, aromatic Indian gravies and charcoal tandoori courses.'
     }
