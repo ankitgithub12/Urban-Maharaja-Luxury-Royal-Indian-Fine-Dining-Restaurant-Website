@@ -1,0 +1,17 @@
+{
+  "name": "urban-maharaja-monorepo",
+  "version": "1.0.0",
+  "description": "Urban Maharaja - Luxury Royal Indian Fine Dining Restaurant Website",
+  "main": "server/server.js",
+  "scripts": {
+    "install-all": "npm install && npm install --prefix client --legacy-peer-deps && npm install --prefix server",
+    "dev": "concurrently \"npm run dev --prefix client\" \"npm run server --prefix server\"",
+    "client": "npm run dev --prefix client",
+    "server": "npm run dev --prefix server",
+    "build-client": "npm run build --prefix client",
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
