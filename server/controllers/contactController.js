@@ -1,5 +1,6 @@
 import Contact from '../models/Contact.js';
 import Subscriber from '../models/Subscriber.js';
+import { createNotification } from './notificationController.js';
 
 /**
  * Handle general contact form queries
@@ -19,6 +20,14 @@ export const submitContact = async (req, res) => {
       phone,
       subject,
       message,
+    });
+
+    // Trigger notification
+    await createNotification({
+      type: 'contact',
+      title: 'New Customer Inquiry',
+      message: `New message from ${name} regarding: "${subject || 'No Subject'}"`,
+      relatedId: newMessage._id
     });
 
     return res.status(201).json({
@@ -55,6 +64,14 @@ export const subscribeNewsletter = async (req, res) => {
     // Create new subscriber
     const newSubscriber = await Subscriber.create({
       email: email.toLowerCase()
+    });
+
+    // Trigger notification
+    await createNotification({
+      type: 'subscriber',
+      title: 'New Newsletter Subscriber',
+      message: `${email.toLowerCase()} joined the newsletter subscription list.`,
+      relatedId: newSubscriber._id
     });
 
     return res.status(201).json({

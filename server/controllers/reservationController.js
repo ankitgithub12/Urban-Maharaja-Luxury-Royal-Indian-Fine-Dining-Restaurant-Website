@@ -1,4 +1,5 @@
 import Reservation from '../models/Reservation.js';
+import { createNotification } from './notificationController.js';
 
 // Helper to generate a unique booking reference
 const generateBookingCode = () => {
@@ -112,6 +113,14 @@ export const createReservation = async (req, res) => {
       dietaryNotes,
       specialOccasion,
       bookingCode,
+    });
+
+    // Trigger notification
+    await createNotification({
+      type: 'reservation',
+      title: 'New Reservation',
+      message: `${name} has reserved a table for ${requestedGuests} guests on ${new Date(date).toLocaleDateString()} (${timeSlot})`,
+      relatedId: reservation._id
     });
 
     return res.status(201).json({

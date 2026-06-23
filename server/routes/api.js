@@ -20,6 +20,19 @@ import {
   createAdminSubscriber,
   deleteSubscriber
 } from '../controllers/adminController.js';
+import {
+  login,
+  getProfile,
+  updateProfile
+} from '../controllers/authController.js';
+import {
+  getNotificationsStream,
+  getNotificationHistory,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification
+} from '../controllers/notificationController.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -32,16 +45,28 @@ router.get('/reservations/my-bookings', getMyBookings);
 router.post('/contact', submitContact);
 router.post('/newsletter', subscribeNewsletter);
 
+// Admin Auth
+router.post('/admin/login', login);
+router.get('/admin/profile', authMiddleware, getProfile);
+router.put('/admin/profile', authMiddleware, updateProfile);
+
+// Admin Notifications
+router.get('/admin/notifications', authMiddleware, getNotificationsStream);
+router.get('/admin/notifications/history', authMiddleware, getNotificationHistory);
+router.put('/admin/notifications/read-all', authMiddleware, markAllAsRead);
+router.put('/admin/notifications/:id/read', authMiddleware, markAsRead);
+router.delete('/admin/notifications/:id', authMiddleware, deleteNotification);
+
 // Admin dashboard operations
-router.get('/admin/stats', getAdminStats);
-router.get('/admin/reservations', getAllReservations);
-router.post('/admin/reservations', createAdminReservation);
-router.put('/admin/reservations/:id', updateReservation);
-router.delete('/admin/reservations/:id', deleteReservation);
-router.get('/admin/contacts', getAllContacts);
-router.delete('/admin/contacts/:id', deleteContact);
-router.get('/admin/subscribers', getAllSubscribers);
-router.post('/admin/subscribers', createAdminSubscriber);
-router.delete('/admin/subscribers/:id', deleteSubscriber);
+router.get('/admin/stats', authMiddleware, getAdminStats);
+router.get('/admin/reservations', authMiddleware, getAllReservations);
+router.post('/admin/reservations', authMiddleware, createAdminReservation);
+router.put('/admin/reservations/:id', authMiddleware, updateReservation);
+router.delete('/admin/reservations/:id', authMiddleware, deleteReservation);
+router.get('/admin/contacts', authMiddleware, getAllContacts);
+router.delete('/admin/contacts/:id', authMiddleware, deleteContact);
+router.get('/admin/subscribers', authMiddleware, getAllSubscribers);
+router.post('/admin/subscribers', authMiddleware, createAdminSubscriber);
+router.delete('/admin/subscribers/:id', authMiddleware, deleteSubscriber);
 
 export default router;

@@ -14,7 +14,10 @@ import {
   FiAlertCircle as AlertCircle, 
   FiLoader as Loader2, 
   FiRefreshCw as RefreshCw, 
-  FiFilter as Filter
+  FiFilter as Filter,
+  FiBell as Bell,
+  FiUser as User,
+  FiCheck as Check
 } from 'react-icons/fi';
 import { HiSparkles as Sparkles } from 'react-icons/hi';
 import { GiCrown as Crown } from 'react-icons/gi';
@@ -24,8 +27,18 @@ const API_BASE_URL = 'http://localhost:5000/api';
 const Dashboard = ({ navigate }) => {
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passphrase, setPassphrase] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [admin, setAdmin] = useState(null);
+
+  // Profile management state
+  const [profileForm, setProfileForm] = useState({ name: '', email: '', phone: '' });
+  const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+
+  // Notifications State
+  const [notifications, setNotifications] = useState([]);
+  const [showNotificationsDropdown, setShowNotificationsDropdown] = useState(false);
 
   // Dashboard Data State
   const [stats, setStats] = useState(null);
@@ -68,11 +81,11 @@ const Dashboard = ({ navigate }) => {
     status: 'confirmed'
   });
 
-  // Check auth on load
+  // Check auth on load by validating current token
   useEffect(() => {
-    const authStatus = localStorage.getItem('is_maharaja_admin');
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      validateTokenAndBoot();
     }
   }, []);
 
@@ -83,20 +96,151 @@ const Dashboard = ({ navigate }) => {
     }
   }, [isAuthenticated]);
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (passphrase === 'MaharajaAdmin2026') {
+  // Real-time EventSource connection for notifications
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const token = localStorage.getItem('admin_token');
+    if (!token) return;
+
+    let eventSource;
+    let reconnectTimeout;
+
+    const connectSSE = () => {
+      eventSource = new EventSource(`${API_BASE_URL}/admin/notifications?token=${token}`);
+
+      eventSource.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          
+          if (payload.type === 'notification') {
+            // Append new notification to front
+            setNotifications(prev => [payload.data, ...prev]);
+            
+            // Highlight notification alert
+            showNotification('success', `Live Alert: ${payload.data.title}`);
+            
+            // Silently refresh stats and views
+            silentRefreshData();
+          }
+        } catch (err) {
+          console.error('[SSE message parse error]', err);
+        }
+      };
+
+      eventSource.onerror = (err) => {
+        console.error('[SSE connection error]', err);
+        eventSource.close();
+        
+        // Reconnect logic after 5 seconds
+        reconnectTimeout = setTimeout(() => {
+          console.log('[SSE] Reconnecting to channel...');
+          connectSSE();
+        }, 5000);
+      };
+    };
+
+    connectSSE();
+
+    return () => {
+      if (eventSource) eventSource.close();
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+    };
+  }, [isAuthenticated]);
+
+  const validateTokenAndBoot = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/profile`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+        }
+      });
+      
+      if (response.status === 401) {
+        handleLogout();
+      } else {
+        const data = await response.json();
+        if (data.success) {
+          setAdmin(data.admin);
+          setProfileForm({
+            name: data.admin.name,
+            email: data.admin.email,
+            phone: data.admin.phone
+          });
+          setIsAuthenticated(true);
+        }
+      }
+    } catch (err) {
+      console.error('[Token validation error]', err);
+      // Fallback: stay authenticated if token is saved, but allow backend requests to check status
       setIsAuthenticated(true);
-      localStorage.setItem('is_maharaja_admin', 'true');
-      setLoginError('');
-    } else {
-      setLoginError('Sovereign passphrase incorrect. Access denied.');
+    }
+  };
+
+  // Secure API requests wrapper
+  const authFetch = async (url, options = {}) => {
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      handleLogout();
+      throw new Error('Unauthenticated session');
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...options.headers
+    };
+
+    const response = await fetch(url, { ...options, headers });
+    
+    if (response.status === 401) {
+      handleLogout();
+      throw new Error('Session expired. Please log in again.');
+    }
+
+    return response;
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        localStorage.setItem('admin_token', data.token);
+        setAdmin(data.admin);
+        setProfileForm({
+          name: data.admin.name,
+          email: data.admin.email,
+          phone: data.admin.phone
+        });
+        setIsAuthenticated(true);
+        setEmail('');
+        setPassword('');
+      } else {
+        setLoginError(data.message || 'Incorrect email or password.');
+      }
+    } catch (err) {
+      console.error(err);
+      setLoginError('Throne Server unreachable. Check backend terminal.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem('is_maharaja_admin');
+    setAdmin(null);
+    setNotifications([]);
+    localStorage.removeItem('admin_token');
   };
 
   const fetchDashboardData = async () => {
@@ -104,29 +248,57 @@ const Dashboard = ({ navigate }) => {
     setErrorMessage('');
     try {
       // Fetch Stats
-      const statsRes = await fetch(`${API_BASE_URL}/admin/stats`);
+      const statsRes = await authFetch(`${API_BASE_URL}/admin/stats`);
       const statsData = await statsRes.json();
       if (statsData.success) setStats(statsData.stats);
 
       // Fetch Reservations
-      const resRes = await fetch(`${API_BASE_URL}/admin/reservations`);
+      const resRes = await authFetch(`${API_BASE_URL}/admin/reservations`);
       const resData = await resRes.json();
       if (resData.success) setReservations(resData.data);
 
       // Fetch Contacts
-      const contactRes = await fetch(`${API_BASE_URL}/admin/contacts`);
+      const contactRes = await authFetch(`${API_BASE_URL}/admin/contacts`);
       const contactData = await contactRes.json();
       if (contactData.success) setContacts(contactData.data);
 
       // Fetch Subscribers
-      const subRes = await fetch(`${API_BASE_URL}/admin/subscribers`);
+      const subRes = await authFetch(`${API_BASE_URL}/admin/subscribers`);
+      const subData = await subRes.json();
+      if (subData.success) setSubscribers(subData.data);
+
+      // Fetch Notifications Logs
+      const notifRes = await authFetch(`${API_BASE_URL}/admin/notifications/history`);
+      const notifData = await notifRes.json();
+      if (notifData.success) setNotifications(notifData.notifications);
+    } catch (err) {
+      console.error(err);
+      setErrorMessage(err.message || 'Could not fetch server records. Please verify database connection.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Silent refresh data for background updates (SSE triggered)
+  const silentRefreshData = async () => {
+    try {
+      const statsRes = await authFetch(`${API_BASE_URL}/admin/stats`);
+      const statsData = await statsRes.json();
+      if (statsData.success) setStats(statsData.stats);
+
+      const resRes = await authFetch(`${API_BASE_URL}/admin/reservations`);
+      const resData = await resRes.json();
+      if (resData.success) setReservations(resData.data);
+
+      const contactRes = await authFetch(`${API_BASE_URL}/admin/contacts`);
+      const contactData = await contactRes.json();
+      if (contactData.success) setContacts(contactData.data);
+
+      const subRes = await authFetch(`${API_BASE_URL}/admin/subscribers`);
       const subData = await subRes.json();
       if (subData.success) setSubscribers(subData.data);
     } catch (err) {
-      console.error(err);
-      setErrorMessage('Could not fetch server records. Please verify database connection.');
-    } finally {
-      setLoading(false);
+      console.warn('[SSE Background refresh error]', err.message);
     }
   };
 
@@ -144,9 +316,8 @@ const Dashboard = ({ navigate }) => {
   const handleUpdateStatus = async (id, status) => {
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/reservations/${id}`, {
+      const res = await authFetch(`${API_BASE_URL}/admin/reservations/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
       const data = await res.json();
@@ -157,7 +328,7 @@ const Dashboard = ({ navigate }) => {
         showNotification('error', data.message || 'Failed to update reservation');
       }
     } catch (err) {
-      showNotification('error', 'Network failure updating reservation');
+      showNotification('error', err.message || 'Network failure updating reservation');
     } finally {
       setActionLoading(false);
     }
@@ -167,7 +338,7 @@ const Dashboard = ({ navigate }) => {
     if (!confirm('Are you absolutely sure you want to permanently delete this reservation?')) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/reservations/${id}`, {
+      const res = await authFetch(`${API_BASE_URL}/admin/reservations/${id}`, {
         method: 'DELETE'
       });
       const data = await res.json();
@@ -178,7 +349,7 @@ const Dashboard = ({ navigate }) => {
         showNotification('error', data.message || 'Failed to delete reservation');
       }
     } catch (err) {
-      showNotification('error', 'Network error deleting reservation');
+      showNotification('error', err.message || 'Network error deleting reservation');
     } finally {
       setActionLoading(false);
     }
@@ -188,16 +359,14 @@ const Dashboard = ({ navigate }) => {
     e.preventDefault();
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/reservations`, {
+      const res = await authFetch(`${API_BASE_URL}/admin/reservations`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(resForm)
       });
       const data = await res.json();
       if (data.success) {
         showNotification('success', 'New reservation added successfully');
         setShowAddResModal(false);
-        // Reset form
         setResForm({
           name: '',
           email: '',
@@ -215,7 +384,7 @@ const Dashboard = ({ navigate }) => {
         showNotification('error', data.message || 'Failed to create reservation');
       }
     } catch (err) {
-      showNotification('error', 'Network error creating reservation');
+      showNotification('error', err.message || 'Network error creating reservation');
     } finally {
       setActionLoading(false);
     }
@@ -225,9 +394,8 @@ const Dashboard = ({ navigate }) => {
     e.preventDefault();
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/reservations/${selectedRes._id}`, {
+      const res = await authFetch(`${API_BASE_URL}/admin/reservations/${selectedRes._id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(selectedRes)
       });
       const data = await res.json();
@@ -240,7 +408,7 @@ const Dashboard = ({ navigate }) => {
         showNotification('error', data.message || 'Failed to edit reservation');
       }
     } catch (err) {
-      showNotification('error', 'Network error saving reservation changes');
+      showNotification('error', err.message || 'Network error saving reservation changes');
     } finally {
       setActionLoading(false);
     }
@@ -250,7 +418,7 @@ const Dashboard = ({ navigate }) => {
     if (!confirm('Delete this inquiry permanently?')) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/contacts/${id}`, {
+      const res = await authFetch(`${API_BASE_URL}/admin/contacts/${id}`, {
         method: 'DELETE'
       });
       const data = await res.json();
@@ -259,7 +427,7 @@ const Dashboard = ({ navigate }) => {
         fetchDashboardData();
       }
     } catch (err) {
-      showNotification('error', 'Network error deleting inquiry');
+      showNotification('error', err.message || 'Network error deleting inquiry');
     } finally {
       setActionLoading(false);
     }
@@ -270,9 +438,8 @@ const Dashboard = ({ navigate }) => {
     if (!newSubEmail) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/subscribers`, {
+      const res = await authFetch(`${API_BASE_URL}/admin/subscribers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: newSubEmail })
       });
       const data = await res.json();
@@ -284,7 +451,7 @@ const Dashboard = ({ navigate }) => {
         showNotification('error', data.message || 'Failed to add subscriber');
       }
     } catch (err) {
-      showNotification('error', 'Network error adding subscriber');
+      showNotification('error', err.message || 'Network error adding subscriber');
     } finally {
       setActionLoading(false);
     }
@@ -294,7 +461,7 @@ const Dashboard = ({ navigate }) => {
     if (!confirm('Unsubscribe this client from the newsletter list?')) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/subscribers/${id}`, {
+      const res = await authFetch(`${API_BASE_URL}/admin/subscribers/${id}`, {
         method: 'DELETE'
       });
       const data = await res.json();
@@ -303,9 +470,111 @@ const Dashboard = ({ navigate }) => {
         fetchDashboardData();
       }
     } catch (err) {
-      showNotification('error', 'Network error removing subscriber');
+      showNotification('error', err.message || 'Network error removing subscriber');
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  // Profile Settings Actions
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      const res = await authFetch(`${API_BASE_URL}/admin/profile`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: profileForm.name,
+          email: profileForm.email,
+          phone: profileForm.phone
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAdmin(data.admin);
+        showNotification('success', 'Palace profile updated successfully');
+      } else {
+        showNotification('error', data.message || 'Failed to update profile info');
+      }
+    } catch (err) {
+      showNotification('error', err.message || 'Server error updating profile details');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      showNotification('error', 'New credentials verification mismatch.');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await authFetch(`${API_BASE_URL}/admin/profile`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          oldPassword: passwordForm.oldPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showNotification('success', 'Administrative password changed successfully.');
+        setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        showNotification('error', data.message || 'Password update declined.');
+      }
+    } catch (err) {
+      showNotification('error', err.message || 'Server connection error during credentials reset.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Notification Feed Actions
+  const handleMarkAsRead = async (id, e) => {
+    e.stopPropagation();
+    try {
+      const res = await authFetch(`${API_BASE_URL}/admin/notifications/${id}/read`, {
+        method: 'PUT'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      const res = await authFetch(`${API_BASE_URL}/admin/notifications/read-all`, {
+        method: 'PUT'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        showNotification('success', 'All notification feeds marked as read');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteNotification = async (id, e) => {
+    e.stopPropagation();
+    try {
+      const res = await authFetch(`${API_BASE_URL}/admin/notifications/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotifications(prev => prev.filter(n => n._id !== id));
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -338,6 +607,8 @@ const Dashboard = ({ navigate }) => {
     return s.email.toLowerCase().includes(subSearch.toLowerCase());
   });
 
+  const unreadNotifCount = notifications.filter(n => !n.read).length;
+
   // Authenticate UI Page
   if (!isAuthenticated) {
     return (
@@ -357,18 +628,30 @@ const Dashboard = ({ navigate }) => {
               Imperial Court <br />
               <span className="text-gold">Admin Portal</span>
             </h1>
-            <p className="text-xs text-gold-light/60 mt-2 uppercase tracking-widest">Authorized Access Only</p>
+            <p className="text-xs text-gold-light/60 mt-2 uppercase tracking-widest">Secure Access Panel</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-xs uppercase tracking-widest text-gold mb-2 font-medium">Sovereign Passphrase</label>
+              <label className="block text-xs uppercase tracking-widest text-gold mb-1.5 font-medium">Sovereign Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@urbanmaharaja.com"
+                className="w-full bg-[#050C1A] border border-gold/20 focus:border-gold/60 px-4 py-3 text-gold-light text-sm outline-none transition-colors"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs uppercase tracking-widest text-gold mb-1.5 font-medium">Admin Password</label>
               <input
                 type="password"
                 required
-                value={passphrase}
-                onChange={(e) => setPassphrase(e.target.value)}
-                placeholder="Enter secret credentials..."
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••••••"
                 className="w-full bg-[#050C1A] border border-gold/20 focus:border-gold/60 px-4 py-3 text-gold-light text-sm outline-none transition-colors"
               />
             </div>
@@ -382,8 +665,10 @@ const Dashboard = ({ navigate }) => {
 
             <button
               type="submit"
-              className="btn-gold-shimmer w-full py-3.5 text-xs font-bold tracking-widest uppercase cursor-pointer"
+              disabled={loading}
+              className="btn-gold-shimmer w-full py-3.5 text-xs font-bold tracking-widest uppercase cursor-pointer flex items-center justify-center gap-2"
             >
+              {loading && <Loader2 className="w-3 h-3 animate-spin" />}
               Sign In to Throne Room
             </button>
 
@@ -415,6 +700,94 @@ const Dashboard = ({ navigate }) => {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Real-time Notification Bell */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotificationsDropdown(!showNotificationsDropdown)}
+                className="p-2 border border-gold/10 hover:border-gold/30 text-gold-light/80 hover:text-gold transition-colors flex items-center justify-center cursor-pointer relative"
+                title="Notifications Log"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadNotifCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4.5 h-4.5 bg-gold text-[#050C1A] text-[9px] font-bold rounded-full flex items-center justify-center badge-pulse">
+                    {unreadNotifCount}
+                  </span>
+                )}
+              </button>
+              
+              {showNotificationsDropdown && (
+                <div className="absolute right-0 mt-3 w-80 glass-panel border border-gold/25 z-50 shadow-2xl max-h-[400px] flex flex-col animate-fade-up">
+                  <div className="p-3 border-b border-gold/15 flex items-center justify-between bg-[#030811]/90">
+                    <span className="text-xs font-serif uppercase tracking-widest text-gold font-bold">Palace Alert Feed</span>
+                    {unreadNotifCount > 0 && (
+                      <button
+                        onClick={handleMarkAllAsRead}
+                        className="text-[9px] text-gold-light/60 hover:text-gold uppercase tracking-wider font-semibold"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="overflow-y-auto flex-grow divide-y divide-gold/10">
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center text-[10px] text-gold-light/45 uppercase tracking-widest">
+                        No notifications yet
+                      </div>
+                    ) : (
+                      notifications.map(n => (
+                        <div 
+                          key={n._id} 
+                          onClick={(e) => {
+                            handleMarkAsRead(n._id, e);
+                            if (n.type === 'reservation') setActiveTab('reservations');
+                            else if (n.type === 'contact') setActiveTab('contacts');
+                            else if (n.type === 'subscriber') setActiveTab('subscribers');
+                            setShowNotificationsDropdown(false);
+                          }}
+                          className={`p-3 text-left transition-colors cursor-pointer flex gap-3 hover:bg-gold/5 ${!n.read ? 'bg-gold/3' : ''}`}
+                        >
+                          <div className="mt-0.5 text-gold flex-shrink-0">
+                            {n.type === 'reservation' && <Calendar className="w-3.5 h-3.5" />}
+                            {n.type === 'contact' && <Mail className="w-3.5 h-3.5" />}
+                            {n.type === 'subscriber' && <Users className="w-3.5 h-3.5" />}
+                            {n.type === 'system' && <AlertCircle className="w-3.5 h-3.5" />}
+                          </div>
+                          
+                          <div className="flex-grow min-w-0">
+                            <div className="flex justify-between items-start gap-1">
+                              <p className={`text-[11px] font-semibold truncate ${!n.read ? 'text-gold-light' : 'text-gold-light/60'}`}>{n.title}</p>
+                              <span className="text-[8px] text-gold-light/40 uppercase whitespace-nowrap">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <p className="text-[10px] text-gold-light/70 mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
+                            
+                            <div className="flex items-center justify-between mt-2">
+                              {!n.read ? (
+                                <button
+                                  onClick={(e) => handleMarkAsRead(n._id, e)}
+                                  className="text-[9px] text-emerald-400 hover:text-emerald-300 font-medium uppercase tracking-wider flex items-center gap-0.5"
+                                >
+                                  <Check className="w-2.5 h-2.5" /> Mark read
+                                </button>
+                              ) : (
+                                <span className="text-[9px] text-gold-light/40 font-medium uppercase">Read</span>
+                              )}
+                              <button
+                                onClick={(e) => handleDeleteNotification(n._id, e)}
+                                className="text-[9px] text-gold-light/45 hover:text-red-400 font-medium uppercase tracking-wider"
+                              >
+                                Dismiss
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={fetchDashboardData}
               disabled={loading}
@@ -423,12 +796,14 @@ const Dashboard = ({ navigate }) => {
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
+            
             <button
               onClick={() => navigate('/')}
               className="px-4 py-2 border border-gold/25 text-gold hover:text-gold-light hover:border-gold text-xs tracking-widest uppercase transition-all duration-300 cursor-pointer"
             >
               View Website
             </button>
+            
             <button
               onClick={handleLogout}
               className="px-4 py-2 bg-red-950/40 border border-red-500/20 hover:bg-red-900/40 hover:border-red-500 text-red-400 hover:text-red-300 text-xs tracking-widest uppercase transition-all duration-300 flex items-center gap-1.5 cursor-pointer"
@@ -535,6 +910,16 @@ const Dashboard = ({ navigate }) => {
             }`}
           >
             Newsletter Subscribers
+          </button>
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`pb-3 text-xs tracking-widest uppercase font-semibold transition-all cursor-pointer ${
+              activeTab === 'profile' 
+                ? 'border-b-2 border-gold text-gold font-bold' 
+                : 'text-gold-light/60 hover:text-gold-light'
+            }`}
+          >
+            Admin Profile
           </button>
         </div>
 
@@ -695,12 +1080,11 @@ const Dashboard = ({ navigate }) => {
                                 )}
                                 <button
                                   onClick={() => {
-                                    // Make date string formatted for input value YYYY-MM-DD
                                     const formattedDate = new Date(res.date).toISOString().slice(0, 10);
                                     setSelectedRes({ ...res, date: formattedDate });
                                     setShowEditResModal(true);
                                   }}
-                                  className="p-1.5 border border-gold/25 hover:border-gold bg-gold/5 text-gold hover:text-royal-navy transition-colors cursor-pointer"
+                                  className="p-1.5 border border-gold/25 hover:border-gold bg-gold/5 text-gold hover:text-[#050C1A] transition-colors cursor-pointer"
                                   title="Edit Booking"
                                 >
                                   <Edit className="w-3.5 h-3.5" />
@@ -750,7 +1134,7 @@ const Dashboard = ({ navigate }) => {
                     </div>
                   ) : (
                     filteredContacts.map(c => (
-                      <div key={c._id} className="glass-panel p-6 border border-gold/10 relative flex flex-col justify-between hover:border-gold/30 transition-all duration-300">
+                      <div key={c._id} className="glass-panel p-6 border border-gold/10 relative flex flex-col justify-between hover:border-gold/30 transition-all duration-300 font-light text-gold-light/80">
                         <button
                           onClick={() => handleDeleteContact(c._id)}
                           className="absolute top-4 right-4 text-gold-light/45 hover:text-red-400 transition-colors p-1"
@@ -872,6 +1256,143 @@ const Dashboard = ({ navigate }) => {
                         )}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PROFILE SETTINGS TAB */}
+            {activeTab === 'profile' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Left Profile Info Card */}
+                <div className="lg:col-span-4 glass-panel p-6 border border-gold/10 flex flex-col items-center text-center space-y-4">
+                  <div className="w-24 h-24 rounded-full border-2 border-gold flex items-center justify-center bg-gold/5 relative overflow-hidden">
+                    <User className="w-12 h-12 text-gold animate-pulse-slow" />
+                    <div className="absolute bottom-0 inset-x-0 bg-gold/20 py-0.5 text-[8px] text-gold uppercase tracking-widest font-bold">
+                      {admin?.role || 'Admin'}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-serif text-lg font-bold text-gold-light">{admin?.name || 'Sovereign Administrator'}</h3>
+                    <p className="text-xs text-gold uppercase tracking-widest font-medium mt-1">{admin?.role || 'Palace Administrator'}</p>
+                  </div>
+
+                  <div className="w-full border-t border-gold/10 pt-4 text-xs text-left space-y-2.5 text-gold-light/80 font-light">
+                    <div>
+                      <span className="text-[10px] text-gold uppercase tracking-widest font-medium block">Mailbox</span>
+                      <span>{admin?.email}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-gold uppercase tracking-widest font-medium block">Phone Registry</span>
+                      <span>{admin?.phone}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Profile Form fields */}
+                <div className="lg:col-span-8 space-y-8">
+                  {/* Account detail editor */}
+                  <div className="glass-panel p-6 border border-gold/10 space-y-6">
+                    <div className="border-b border-gold/10 pb-3">
+                      <h3 className="font-serif text-base text-gold font-semibold uppercase">Profile Settings</h3>
+                      <p className="text-[10px] text-gold-light/65">Alter administrative contact information.</p>
+                    </div>
+
+                    <form onSubmit={handleUpdateProfile} className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wider text-gold-light/70 mb-1">Administrative Name</label>
+                          <input
+                            type="text" required
+                            value={profileForm.name}
+                            onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                            placeholder="Administrator Name"
+                            className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 px-3.5 py-2.5 text-xs text-gold-light outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wider text-gold-light/70 mb-1">Contact Phone</label>
+                          <input
+                            type="text" required
+                            value={profileForm.phone}
+                            onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                            placeholder="Phone Number"
+                            className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 px-3.5 py-2.5 text-xs text-gold-light outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-wider text-gold-light/70 mb-1">Email Address</label>
+                        <input
+                          type="email" required
+                          value={profileForm.email}
+                          onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                          placeholder="admin@urbanmaharaja.com"
+                          className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 px-3.5 py-2.5 text-xs text-gold-light outline-none"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={actionLoading}
+                        className="btn-gold-shimmer px-6 py-2.5 text-xs font-semibold tracking-widest uppercase cursor-pointer"
+                      >
+                        Save Settings
+                      </button>
+                    </form>
+                  </div>
+
+                  {/* Password modifier */}
+                  <div className="glass-panel p-6 border border-gold/10 space-y-6">
+                    <div className="border-b border-gold/10 pb-3">
+                      <h3 className="font-serif text-base text-gold font-semibold uppercase">Change Portal Password</h3>
+                      <p className="text-[10px] text-gold-light/65">Change your credentials for admin login access.</p>
+                    </div>
+
+                    <form onSubmit={handleChangePassword} className="space-y-4">
+                      <div>
+                        <label className="block text-[10px] uppercase tracking-wider text-gold-light/70 mb-1">Current Password</label>
+                        <input
+                          type="password" required
+                          value={passwordForm.oldPassword}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                          placeholder="Enter current password"
+                          className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 px-3.5 py-2.5 text-xs text-gold-light outline-none"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wider text-gold-light/70 mb-1">New Password</label>
+                          <input
+                            type="password" required
+                            value={passwordForm.newPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                            placeholder="At least 6 characters"
+                            className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 px-3.5 py-2.5 text-xs text-gold-light outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-wider text-gold-light/70 mb-1">Confirm New Password</label>
+                          <input
+                            type="password" required
+                            value={passwordForm.confirmPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                            placeholder="Confirm new password"
+                            className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 px-3.5 py-2.5 text-xs text-gold-light outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={actionLoading}
+                        className="btn-gold-shimmer px-6 py-2.5 text-xs font-semibold tracking-widest uppercase cursor-pointer"
+                      >
+                        Update Password
+                      </button>
+                    </form>
                   </div>
                 </div>
               </div>
