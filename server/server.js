@@ -1,11 +1,16 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import apiRoutes from './routes/api.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Load environmental parameters
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Establish Database Connection
 connectDB();

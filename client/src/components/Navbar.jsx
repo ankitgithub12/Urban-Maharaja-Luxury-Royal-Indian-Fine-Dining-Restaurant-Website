@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiMenu, FiX, FiCalendar } from 'react-icons/fi';
-import { GiCrown } from 'react-icons/gi';
+import { Menu, X, CalendarDays, Crown } from 'lucide-react';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -10,13 +9,9 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -24,6 +19,16 @@ const Navbar = () => {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileMenuOpen]);
 
   const navLinks = [
     { name: 'Our Story', path: '/story' },
@@ -35,16 +40,25 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
-      isScrolled 
-        ? 'bg-[#050C1Ac0] backdrop-blur-md border-b border-gold/15 py-4 shadow-lg' 
-        : 'bg-transparent py-6'
-    }`}>
+    <nav
+      id="main-navigation"
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-700 ${
+        isScrolled 
+          ? 'bg-[#050C1A]/95 backdrop-blur-2xl border-b border-gold/10 py-2.5 shadow-[0_4px_30px_rgba(0,0,0,0.4)]' 
+          : 'bg-transparent py-5'
+      }`}
+    >
+      {/* Subtle gold line at the very top */}
+      <div className={`absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/30 to-transparent transition-opacity duration-700 ${isScrolled ? 'opacity-100' : 'opacity-0'}`} />
+
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <GiCrown className="w-8 h-8 text-gold transition-transform duration-500 group-hover:rotate-[360deg]" />
-          <span className="font-serif text-2xl font-bold tracking-widest text-gold-light group-hover:text-gold transition-colors duration-300">
+        <Link to="/" className="flex items-center gap-2.5 group" id="brand-logo">
+          <div className="relative">
+            <Crown className="w-8 h-8 text-gold transition-all duration-700 group-hover:rotate-12 group-hover:scale-110 group-hover:drop-shadow-[0_0_12px_rgba(212,175,55,0.5)]" strokeWidth={1.5} />
+            <div className="absolute inset-0 bg-gold/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          </div>
+          <span className="font-serif text-xl font-bold tracking-widest text-gold-light group-hover:text-gold transition-colors duration-300">
             URBAN <span className="text-gold">MAHARAJA</span>
           </span>
         </Link>
@@ -57,10 +71,10 @@ const Navbar = () => {
               <Link
                 key={link.name}
                 to={link.path}
-                className={`font-sans text-sm tracking-widest transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:height-[1px] after:bg-gold after:transition-all after:duration-300 ${
+                className={`nav-link-animated font-sans text-[11px] tracking-[0.15em] uppercase transition-all duration-300 py-1 ${
                   isActive 
-                    ? 'text-gold after:w-full' 
-                    : 'text-[#FDFBF7]/80 hover:text-gold after:w-0 hover:after:w-full'
+                    ? 'text-gold font-semibold active' 
+                    : 'text-[#FDFBF7]/70 hover:text-gold'
                 }`}
               >
                 {link.name}
@@ -73,9 +87,10 @@ const Navbar = () => {
         <div className="hidden lg:block">
           <Link
             to="/reserve"
-            className="btn-gold-shimmer px-6 py-2.5 rounded-none font-sans text-xs tracking-widest uppercase font-semibold flex items-center gap-2"
+            id="nav-reserve-btn"
+            className="btn-gold-shimmer px-6 py-2.5 rounded-none font-sans text-[10px] tracking-widest uppercase font-semibold flex items-center gap-2"
           >
-            <FiCalendar className="w-4 h-4" />
+            <CalendarDays className="w-3.5 h-3.5" strokeWidth={2} />
             Reserve Table
           </Link>
         </div>
@@ -83,36 +98,72 @@ const Navbar = () => {
         {/* Mobile Menu Trigger */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="lg:hidden text-gold hover:text-gold-light focus:outline-none cursor-pointer"
+          className="lg:hidden text-gold hover:text-gold-light focus:outline-none cursor-pointer p-1 transition-colors duration-300"
+          aria-label="Toggle navigation menu"
         >
-          {isMobileMenuOpen ? <FiX className="w-7 h-7" /> : <FiMenu className="w-7 h-7" />}
+          {isMobileMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
         </button>
       </div>
 
       {/* Mobile Menu Panel */}
-      <div className={`fixed inset-0 top-[72px] bg-[#050C1A]/95 backdrop-blur-lg border-t border-gold/10 z-40 transition-all duration-500 lg:hidden ${
+      <div className={`fixed inset-0 top-0 bg-[#050C1A]/[0.98] backdrop-blur-2xl z-40 transition-all duration-500 lg:hidden ${
         isMobileMenuOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full pointer-events-none'
       }`}>
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-72px)] gap-8 p-8 overflow-y-auto">
-          {navLinks.map((link) => {
+        {/* Close button in mobile menu */}
+        <div className="flex justify-end p-6">
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="text-gold hover:text-gold-light p-1 cursor-pointer transition-colors duration-300"
+            aria-label="Close menu"
+          >
+            <X className="w-7 h-7" />
+          </button>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-80px)] gap-7 p-8 overflow-y-auto">
+          {/* Mobile Logo */}
+          <div className="flex items-center gap-2 mb-4">
+            <Crown className="w-6 h-6 text-gold" strokeWidth={1.5} />
+            <span className="font-serif text-lg font-bold tracking-widest text-gold-light">
+              URBAN <span className="text-gold">MAHARAJA</span>
+            </span>
+          </div>
+          
+          {/* Gold Divider */}
+          <div className="gold-divider w-24" />
+          
+          {navLinks.map((link, index) => {
             const isActive = location.pathname === link.path;
             return (
               <Link
                 key={link.name}
                 to={link.path}
-                className={`font-serif text-2xl tracking-widest transition-colors duration-300 ${
-                  isActive ? 'text-gold font-semibold' : 'text-gold-light hover:text-gold'
+                className={`font-serif text-xl tracking-[0.15em] transition-all duration-500 ${
+                  isActive ? 'text-gold font-semibold' : 'text-gold-light/80 hover:text-gold'
                 }`}
+                style={{
+                  transitionDelay: isMobileMenuOpen ? `${index * 80}ms` : '0ms',
+                  opacity: isMobileMenuOpen ? 1 : 0,
+                  transform: isMobileMenuOpen ? 'translateY(0)' : 'translateY(15px)'
+                }}
               >
                 {link.name}
               </Link>
             );
           })}
+          
+          <div className="gold-divider w-24 mt-2" />
+          
           <Link
             to="/reserve"
-            className="btn-gold-shimmer px-8 py-3.5 rounded-none font-sans text-sm tracking-widest uppercase font-semibold flex items-center gap-2 mt-4"
+            className="btn-gold-shimmer px-10 py-4 rounded-none font-sans text-xs tracking-widest uppercase font-semibold flex items-center gap-2 mt-2"
+            style={{
+              transitionDelay: isMobileMenuOpen ? `${navLinks.length * 80}ms` : '0ms',
+              opacity: isMobileMenuOpen ? 1 : 0,
+              transform: isMobileMenuOpen ? 'translateY(0)' : 'translateY(15px)'
+            }}
           >
-            <FiCalendar className="w-5 h-5" />
+            <CalendarDays className="w-4 h-4" strokeWidth={2} />
             Reserve Table
           </Link>
         </div>

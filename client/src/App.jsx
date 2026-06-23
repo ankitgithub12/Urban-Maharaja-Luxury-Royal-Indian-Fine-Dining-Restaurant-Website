@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -25,6 +25,13 @@ function ScrollToTop() {
 
 // Reusable premium header for subpages
 const PageHeader = ({ title, subtitle, bgImage }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="relative h-[45vh] min-h-[320px] w-full flex items-center justify-center overflow-hidden bg-[#050C1A] pt-16">
       {/* Background Image / Gradient */}
@@ -37,17 +44,22 @@ const PageHeader = ({ title, subtitle, bgImage }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#4A0E17] via-[#050C1A] to-[#4A0E17] opacity-60" />
       )}
       
-      {/* Gold Radial Shimmer Overlays */}
+      {/* Gradient Overlays */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#050C1A] via-transparent to-[#050C1A]/80" />
-      <div className="absolute inset-0 bg-radial-gradient from-transparent to-[#050C1A]/95" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#050C1A_85%)]" />
+      
+      {/* Noise texture */}
+      <div className="absolute inset-0 noise-overlay" />
       
       {/* Content */}
       <div className="relative z-10 text-center px-6 max-w-4xl">
         {/* Decorative badge */}
-        <div className="inline-block border border-gold/30 px-3 py-1 bg-[#050C1A]/60 backdrop-blur-sm mb-4">
+        <div className={`inline-block border border-gold/30 px-3 py-1 bg-[#050C1A]/60 backdrop-blur-sm mb-4 transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+          style={{ transitionDelay: '200ms' }}>
           <span className="font-sans text-[10px] tracking-[0.3em] text-gold uppercase block">{subtitle}</span>
         </div>
-        <h1 className="font-serif text-3xl md:text-5xl lg:text-6xl font-bold text-gold-light tracking-wide royal-underline">
+        <h1 className={`font-serif text-3xl md:text-5xl lg:text-6xl font-bold text-gold-light tracking-wide royal-underline text-balance transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
+          style={{ transitionDelay: '400ms' }}>
           {title}
         </h1>
       </div>
@@ -78,7 +90,7 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Intersection Observer for scroll reveal animations (only for home page or subpages with reveal classes)
+  // Intersection Observer for scroll reveal animations
   useEffect(() => {
     const observerOptions = {
       root: null,
@@ -95,7 +107,9 @@ function App() {
       });
     }, observerOptions);
 
-    const revealElements = document.querySelectorAll('.reveal-on-scroll');
+    // Observe all reveal classes
+    const revealSelectors = '.reveal-on-scroll, .reveal-on-scroll-left, .reveal-on-scroll-right';
+    const revealElements = document.querySelectorAll(revealSelectors);
     revealElements.forEach((el) => observer.observe(el));
 
     return () => {
@@ -106,7 +120,7 @@ function App() {
   const isAdmin = location.pathname.startsWith('/admin');
 
   return (
-    <div className="relative min-h-screen bg-[#050C1A] text-[#FDFBF7] antialiased selection:bg-gold selection:text-royal-navy">
+    <div className="relative min-h-screen bg-[#050C1A] text-[#FDFBF7] antialiased selection:bg-gold/30 selection:text-gold-light">
       <ScrollToTop />
       
       {/* Do not render client elements on Admin screens */}
