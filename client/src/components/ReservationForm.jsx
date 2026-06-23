@@ -2,6 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { CalendarDays, ClipboardCopy, Check, Sparkles, MessageCircle } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : 'https://urban-maharaja-luxury-royal-indian-fine.onrender.com/api';
+
 const ReservationForm = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -57,7 +61,7 @@ const ReservationForm = () => {
     setErrorMsg('');
     try {
       const response = await fetch(
-        `http://localhost:5000/api/reservations/check?date=${formData.date}&timeSlot=${formData.timeSlot}&guests=${formData.guests}`
+        `${API_BASE_URL}/reservations/check?date=${formData.date}&timeSlot=${formData.timeSlot}&guests=${formData.guests}`
       );
       const data = await response.json();
       if (data.success) {
@@ -84,7 +88,7 @@ const ReservationForm = () => {
     setErrorMsg('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/reservations', {
+      const response = await fetch(`${API_BASE_URL}/reservations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

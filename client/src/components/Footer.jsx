@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, Mail, Send, Shield } from 'lucide-react';
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : 'https://urban-maharaja-luxury-royal-indian-fine.onrender.com/api';
+
 const Footer = () => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
@@ -11,7 +15,7 @@ const Footer = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/newsletter', {
+      const response = await fetch(`${API_BASE_URL}/newsletter`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

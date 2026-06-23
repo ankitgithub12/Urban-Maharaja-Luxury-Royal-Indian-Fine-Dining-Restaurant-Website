@@ -22,7 +22,9 @@ import {
 import { HiSparkles as Sparkles } from 'react-icons/hi';
 import { GiCrown as Crown } from 'react-icons/gi';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : 'https://urban-maharaja-luxury-royal-indian-fine.onrender.com/api';
 
 const Dashboard = ({ navigate }) => {
   // Authentication State

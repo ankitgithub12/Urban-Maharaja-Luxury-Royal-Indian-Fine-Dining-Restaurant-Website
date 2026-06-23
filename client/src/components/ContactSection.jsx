@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Mail, Phone, MapPin, Clock, Send, Check } from 'lucide-react';
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000/api'
+  : 'https://urban-maharaja-luxury-royal-indian-fine.onrender.com/api';
+
 const ContactSection = () => {
   const location = useLocation();
   const [formState, setFormState] = useState({
@@ -35,7 +39,7 @@ const ContactSection = () => {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:5000/api/contact', {
+      const response = await fetch(`${API_BASE_URL}/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
