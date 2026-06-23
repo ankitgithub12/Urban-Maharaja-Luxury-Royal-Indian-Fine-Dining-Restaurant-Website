@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { CalendarDays, ClipboardCopy, Check, Sparkles, MessageCircle } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
-
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5000/api'
-  : 'https://urban-maharaja-luxury-royal-indian-fine.onrender.com/api';
+import { API_BASE_URL } from '../config';
 
 const ReservationForm = () => {
   const [formData, setFormData] = useState({

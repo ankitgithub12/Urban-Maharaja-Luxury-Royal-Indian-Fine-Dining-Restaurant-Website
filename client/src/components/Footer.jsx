@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, Mail, Send, Shield } from 'lucide-react';
-
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5000/api'
-  : 'https://urban-maharaja-luxury-royal-indian-fine.onrender.com/api';
+import { API_BASE_URL } from '../config';
 
 const Footer = () => {
   const [email, setEmail] = useState('');

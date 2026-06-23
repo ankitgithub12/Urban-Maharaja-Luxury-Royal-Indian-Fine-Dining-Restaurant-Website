@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Mail, Phone, MapPin, Clock, Send, Check } from 'lucide-react';
-
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:5000/api'
-  : 'https://urban-maharaja-luxury-royal-indian-fine.onrender.com/api';
+import { API_BASE_URL } from '../config';
 
 const ContactSection = () => {
   const location = useLocation();
