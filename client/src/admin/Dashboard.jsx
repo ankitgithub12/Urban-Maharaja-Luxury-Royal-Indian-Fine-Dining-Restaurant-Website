@@ -17,7 +17,9 @@ import {
   FiFilter as Filter,
   FiBell as Bell,
   FiUser as User,
-  FiCheck as Check
+  FiCheck as Check,
+  FiEye as Eye,
+  FiEyeOff as EyeOff
 } from 'react-icons/fi';
 import { HiSparkles as Sparkles } from 'react-icons/hi';
 import { GiCrown as Crown } from 'react-icons/gi';
@@ -34,6 +36,12 @@ const Dashboard = ({ navigate }) => {
   // Profile management state
   const [profileForm, setProfileForm] = useState({ name: '', email: '', phone: '' });
   const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+
+  // Password Visibility States
+  const [showPassword, setShowPassword] = useState(false);
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Notifications State
   const [notifications, setNotifications] = useState([]);
@@ -645,14 +653,23 @@ const Dashboard = ({ navigate }) => {
             
             <div>
               <label className="block text-xs uppercase tracking-widest text-gold mb-1.5 font-medium">Admin Password</label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full bg-[#050C1A] border border-gold/20 focus:border-gold/60 px-4 py-3 text-gold-light text-sm outline-none transition-colors"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-[#050C1A] border border-gold/20 focus:border-gold/60 pl-4 pr-10 py-3 text-gold-light text-sm outline-none transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gold-light/60 hover:text-gold transition-colors p-1 cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
 
             {loginError && (
@@ -1353,34 +1370,64 @@ const Dashboard = ({ navigate }) => {
                     <form onSubmit={handleChangePassword} className="space-y-4">
                       <div>
                         <label className="block text-[10px] uppercase tracking-wider text-gold-light/70 mb-1">Current Password</label>
-                        <input
-                          type="password" required
-                          value={passwordForm.oldPassword}
-                          onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
-                          placeholder="Enter current password"
-                          className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 px-3.5 py-2.5 text-xs text-gold-light outline-none"
-                        />
+                        <div className="relative">
+                          <input
+                            type={showOldPassword ? "text" : "password"}
+                            required
+                            value={passwordForm.oldPassword}
+                            onChange={(e) => setPasswordForm({ ...passwordForm, oldPassword: e.target.value })}
+                            placeholder="Enter current password"
+                            className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 pl-3.5 pr-10 py-2.5 text-xs text-gold-light outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowOldPassword(!showOldPassword)}
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gold-light/60 hover:text-gold transition-colors p-1 cursor-pointer"
+                          >
+                            {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-[10px] uppercase tracking-wider text-gold-light/70 mb-1">New Password</label>
-                          <input
-                            type="password" required
-                            value={passwordForm.newPassword}
-                            onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-                            placeholder="At least 6 characters"
-                            className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 px-3.5 py-2.5 text-xs text-gold-light outline-none"
-                          />
+                          <div className="relative">
+                            <input
+                              type={showNewPassword ? "text" : "password"}
+                              required
+                              value={passwordForm.newPassword}
+                              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                              placeholder="At least 6 characters"
+                              className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 pl-3.5 pr-10 py-2.5 text-xs text-gold-light outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowNewPassword(!showNewPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gold-light/60 hover:text-gold transition-colors p-1 cursor-pointer"
+                            >
+                              {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
                         </div>
                         <div>
                           <label className="block text-[10px] uppercase tracking-wider text-gold-light/70 mb-1">Confirm New Password</label>
-                          <input
-                            type="password" required
-                            value={passwordForm.confirmPassword}
-                            onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-                            placeholder="Confirm new password"
-                            className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 px-3.5 py-2.5 text-xs text-gold-light outline-none"
-                          />
+                          <div className="relative">
+                            <input
+                              type={showConfirmPassword ? "text" : "password"}
+                              required
+                              value={passwordForm.confirmPassword}
+                              onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                              placeholder="Confirm new password"
+                              className="w-full bg-[#050C1A] border border-gold/15 focus:border-gold/50 pl-3.5 pr-10 py-2.5 text-xs text-gold-light outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gold-light/60 hover:text-gold transition-colors p-1 cursor-pointer"
+                            >
+                              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
                         </div>
                       </div>
 
