@@ -113,10 +113,10 @@ const Hero = () => {
         <div className={`flex justify-center mb-8 transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`}
           style={{ transitionDelay: '300ms' }}>
           <div className="border border-gold/40 rounded-full p-2.5 bg-[#050C1A]/70 backdrop-blur-sm shadow-lg shadow-gold/5 animate-glow-pulse">
-            <div className="border border-gold/25 rounded-full px-5 py-1.5 flex items-center gap-2.5">
-              <Crown className="w-4 h-4 text-gold" strokeWidth={1.5} />
-              <span className="text-[10px] tracking-[0.3em] font-sans font-medium text-gold uppercase">Est. 1928</span>
-              <Sparkles className="w-3 h-3 text-gold/60" strokeWidth={2} />
+            <div className="border border-gold/25 rounded-full px-5 py-1.5 md:px-7 md:py-2.5 flex items-center gap-2.5 md:gap-3">
+              <Crown className="w-4 h-4 md:w-5 md:h-5 text-gold" strokeWidth={1.5} />
+              <span className="text-[10px] md:text-[13px] lg:text-sm tracking-[0.3em] font-sans font-medium text-gold uppercase">Est. 1928</span>
+              <Sparkles className="w-3 h-3 md:w-4 md:h-4 text-gold/60" strokeWidth={2} />
             </div>
           </div>
         </div>
